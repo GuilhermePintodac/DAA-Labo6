@@ -9,17 +9,37 @@ import kotlinx.coroutines.launch
 class ContactsViewModel(private val repository: ContactsRepository) : ViewModel() {
 
     val allContacts = repository.allContacts
-
     // actions
     fun enroll() {
         viewModelScope.launch {
             // TODO
+            try {
+                // Étape 1 : Supprimer les données locales
+                repository.clearLocalData()
+
+                // Étape 2 : Obtenir un nouvel UUID via l'API `/enroll`
+                val newUuid = repository.getNewUuidFromServer()
+
+                // Étape 3 : Stocker l'UUID obtenu
+                repository.saveUuid(newUuid)
+
+                // Étape 4 : Récupérer les contacts associés à l'UUID via `/contacts`
+                val contactsFromServer = repository.getContactsFromServer(newUuid)
+
+                // Étape 5 : Insérer les contacts récupérés dans la base locale
+                repository.insertContacts(contactsFromServer)
+
+            } catch (e: Exception) {
+                // Gérer les erreurs
+                e.printStackTrace()
+            }
         }
     }
 
     fun refresh() {
         viewModelScope.launch {
             // TODO
+            repository.refreshContacts()
         }
     }
 
