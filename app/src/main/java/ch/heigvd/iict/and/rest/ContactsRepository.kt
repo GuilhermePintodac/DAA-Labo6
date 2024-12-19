@@ -9,7 +9,7 @@ import org.json.JSONArray
 import java.text.SimpleDateFormat
 import java.util.*
 
-class ContactsRepository(private val contactsDao: ContactsDao, private val context: Context) {
+class ContactsRepository(private val contactsDao: ContactsDao) {
 
     val allContacts = contactsDao.getAllContactsLiveData()
 
@@ -28,8 +28,13 @@ class ContactsRepository(private val contactsDao: ContactsDao, private val conte
 
 
     fun saveUuid(uuid: String) {
-        val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val sharedPreferences = ContactsApplication.getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         sharedPreferences.edit().putString("user_uuid", uuid).apply()
+    }
+
+    fun getSavedUuid(): String? {
+        val sharedPreferences = ContactsApplication.getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("user_uuid", null)
     }
 
     suspend fun fetchContactsFromServer(uuid: String): List<Contact> {
@@ -66,6 +71,8 @@ class ContactsRepository(private val contactsDao: ContactsDao, private val conte
     }
 
 
+
+
     companion object {
         private val TAG = "ContactsRepository"
     }
@@ -90,5 +97,33 @@ class ContactsRepository(private val contactsDao: ContactsDao, private val conte
             null
         }
     }
+
+    suspend fun insert(contact: Contact) {
+        contactsDao.insert(contact)
+    }
+
+    suspend fun update(contact: Contact) {
+        contactsDao.update(contact)
+    }
+
+    suspend fun refreshContacts() {
+        try {
+            // Étape 1 : Récupérer l'UUID enregistré dans les SharedPreferences
+            val uuid = getSavedUuid() ?: throw Exception("Aucun UUID trouvé. Impossible de rafraîchir les contacts.")
+
+            // Étape 2 : Récupérer les contacts depuis le serveur
+            val contactsFromServer = fetchContactsFromServer(uuid)
+
+            // Étape 3 : Effacer les données locales
+            clearLocalData()
+
+            // Étape 4 : Insérer les nouveaux contacts dans la base locale
+            insertAllContacts(contactsFromServer)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw Exception("Erreur lors du rafraîchissement des contacts : ${e.message}")
+        }
+    }
+
 
 }

@@ -1,14 +1,17 @@
 package ch.heigvd.iict.and.rest.viewmodels
 
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import ch.heigvd.iict.and.rest.ContactsRepository
+import ch.heigvd.iict.and.rest.models.Contact
 import kotlinx.coroutines.launch
 
 class ContactsViewModel(private val repository: ContactsRepository) : ViewModel() {
 
     val allContacts = repository.allContacts
+    val selectedContact = MutableLiveData<Contact?>() // Permet de partager le contact sélectionné
     // actions
     fun enroll() {
         viewModelScope.launch {
@@ -24,10 +27,10 @@ class ContactsViewModel(private val repository: ContactsRepository) : ViewModel(
                 repository.saveUuid(newUuid)
 
                 // Étape 4 : Récupérer les contacts associés à l'UUID via `/contacts`
-                val contactsFromServer = repository.getContactsFromServer(newUuid)
+                val contactsFromServer = repository.fetchContactsFromServer(newUuid)
 
                 // Étape 5 : Insérer les contacts récupérés dans la base locale
-                repository.insertContacts(contactsFromServer)
+                repository.insertAllContacts(contactsFromServer)
 
             } catch (e: Exception) {
                 // Gérer les erreurs
@@ -42,6 +45,19 @@ class ContactsViewModel(private val repository: ContactsRepository) : ViewModel(
             repository.refreshContacts()
         }
     }
+
+    fun insertContact(contact: Contact) {
+        viewModelScope.launch {
+            repository.insert(contact)
+        }
+    }
+
+    fun updateContact(contact: Contact) {
+        viewModelScope.launch {
+            repository.update(contact)
+        }
+    }
+
 
 }
 

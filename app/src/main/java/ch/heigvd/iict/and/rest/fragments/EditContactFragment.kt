@@ -6,8 +6,10 @@ import android.widget.Button
 import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import ch.heigvd.iict.and.rest.R
 import ch.heigvd.iict.and.rest.models.Contact
+import ch.heigvd.iict.and.rest.models.PhoneType
 import ch.heigvd.iict.and.rest.viewmodels.ContactsViewModel
 
 class EditContactFragment : Fragment(R.layout.fragment_edit_contact) {
@@ -24,32 +26,33 @@ class EditContactFragment : Fragment(R.layout.fragment_edit_contact) {
         val saveButton = view.findViewById<Button>(R.id.save_button)
         val cancelButton = view.findViewById<Button>(R.id.cancel_button)
 
-        // Observer les données du contact sélectionné
         viewModel.selectedContact.observe(viewLifecycleOwner) { contact ->
             nameEditText.setText(contact?.name)
             firstnameEditText.setText(contact?.firstname)
             emailEditText.setText(contact?.email)
-            // Remplissez les autres champs si nécessaire
         }
 
-        // Sauvegarder ou créer un contact
         saveButton.setOnClickListener {
             val newContact = Contact(
-                id = viewModel.selectedContact.value?.id ?: 0,
+                id = viewModel.selectedContact.value?.id,
                 name = nameEditText.text.toString(),
                 firstname = firstnameEditText.text.toString(),
-                email = emailEditText.text.toString()
-                // Récupérez les autres champs
+                email = emailEditText.text.toString(),
+                address = "Default Address",
+                zip = "0000",
+                city = "Default City",
+                birthday = null,
+                type = PhoneType.HOME,
+                phoneNumber = "1234567890"
             )
-            if (newContact.id == 0) {
-                viewModel.insertContact(newContact) // Insertion
+            if (newContact.id == 0L) {
+                viewModel.insertContact(newContact)
             } else {
-                viewModel.updateContact(newContact) // Mise à jour
+                viewModel.updateContact(newContact)
             }
             findNavController().navigateUp()
         }
 
-        // Annuler
         cancelButton.setOnClickListener {
             findNavController().navigateUp()
         }
