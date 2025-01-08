@@ -7,6 +7,7 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.navigation.Navigation.findNavController
+import androidx.navigation.findNavController
 import ch.heigvd.iict.and.rest.databinding.ActivityMainBinding
 import ch.heigvd.iict.and.rest.viewmodels.ContactsViewModel
 import ch.heigvd.iict.and.rest.viewmodels.ContactsViewModelFactory
@@ -25,7 +26,11 @@ class MainActivity : AppCompatActivity() {
 
         binding.mainFabNew.setOnClickListener {
             // FIXME - create a new contact
-            Toast.makeText(this, "TODO - Création d'un nouveau contact", Toast.LENGTH_SHORT).show()
+//            Toast.makeText(this, "TODO - Création d'un nouveau contact", Toast.LENGTH_SHORT).show()
+            contactsViewModel.selectedContact.value = null // Mode création
+            findNavController(R.id.nav_host_fragment).navigate(R.id.action_listFragment_to_editContactFragment)
+//            val navController = findNavController(R.id.nav_host_fragment)
+//            navController.navigate(R.id.action_listFragment_to_editContactFragment)
         }
     }
 

@@ -125,5 +125,29 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
         }
     }
 
+    suspend fun enroll() {
+        try {
+            // Étape 1 : Supprimer les données locales
+            clearLocalData()
+
+            // Étape 2 : Obtenir un nouvel UUID via `/enroll`
+            val newUuid = getNewUuidFromServer()
+
+            // Étape 3 : Stocker l'UUID obtenu
+            saveUuid(newUuid)
+
+            // Étape 4 : Récupérer les contacts associés à l'UUID via `/contacts`
+            val contactsFromServer = fetchContactsFromServer(newUuid)
+
+            // Étape 5 : Insérer les contacts récupérés dans la base locale
+            insertAllContacts(contactsFromServer)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw Exception("Erreur lors de l'enrollment : ${e.message}")
+        }
+    }
+
+
+
 
 }

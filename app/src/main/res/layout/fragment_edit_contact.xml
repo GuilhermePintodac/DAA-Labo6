@@ -1,65 +1,198 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
 
-    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    <EditText
+        android:id="@+id/edit_name"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <LinearLayout
-            android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Name"
+        android:minHeight="48dp"
+        android:padding="12dp"/>
+
+    <EditText
+        android:id="@+id/edit_firstname"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Firstname"
+        android:minHeight="48dp"
+        android:padding="12dp"/>
+
+    <EditText
+        android:id="@+id/edit_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Email"
+        android:minHeight="48dp"
+        android:padding="12dp"/>
+
+    <EditText
+        android:id="@+id/edit_birthday"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Birthday (dd.mm.yyyy)"
+        android:minHeight="48dp"
+        android:padding="12dp"/>
+
+    <EditText
+        android:id="@+id/edit_address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Address"
+        android:minHeight="48dp"
+        android:padding="12dp"/>
+
+    <EditText
+        android:id="@+id/edit_zip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Zip"
+        android:minHeight="48dp"
+        android:padding="12dp"/>
+
+    <EditText
+        android:id="@+id/edit_city"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="City"
+        android:minHeight="48dp"
+        android:padding="12dp"/>
+
+    <RadioGroup
+        android:id="@+id/edit_phone_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/phone_type_home"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:text="Home" />
 
-            <EditText
-                android:id="@+id/edit_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Name"
-                android:minHeight="48dp"
-                android:padding="12dp" />
+        <RadioButton
+            android:id="@+id/phone_type_mobile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mobile" />
 
-            <EditText
-                android:id="@+id/edit_firstname"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Firstname"
-                android:minHeight="48dp"
-                android:padding="12dp" />
+        <RadioButton
+            android:id="@+id/phone_type_office"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Office" />
 
-            <EditText
-                android:id="@+id/edit_email"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="E-Mail"
-                android:minHeight="48dp"
-                android:padding="12dp" />
+        <RadioButton
+            android:id="@+id/phone_type_fax"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Fax" />
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/edit_phone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Phone number"
+        android:minHeight="48dp"
+        android:padding="12dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:id="@+id/cancel_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="CANCEL" />
+
+        <Button
+            android:id="@+id/delete_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="DELETE"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/save_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="SAVE" />
+    </LinearLayout>
+</LinearLayout>
+
+<!--    <?xml version="1.0" encoding="utf-8"?>-->
+<!--<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="match_parent">-->
+
+<!--    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent">-->
+<!--        <LinearLayout-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:orientation="vertical"-->
+<!--            android:padding="16dp">-->
+
+<!--            <EditText-->
+<!--                android:id="@+id/edit_name"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:hint="Name"-->
+<!--                android:minHeight="48dp"-->
+<!--                android:padding="12dp" />-->
+
+<!--            <EditText-->
+<!--                android:id="@+id/edit_firstname"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:hint="Firstname"-->
+<!--                android:minHeight="48dp"-->
+<!--                android:padding="12dp" />-->
+
+<!--            <EditText-->
+<!--                android:id="@+id/edit_email"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:hint="E-Mail"-->
+<!--                android:minHeight="48dp"-->
+<!--                android:padding="12dp" />-->
 
 
-            <!-- Ajoutez les autres champs : Birthday, Address, etc. -->
+<!--            &lt;!&ndash; Ajoutez les autres champs : Birthday, Address, etc. &ndash;&gt;-->
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+<!--            <LinearLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:orientation="horizontal">-->
 
-                <Button
-                    android:id="@+id/cancel_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Cancel" />
+<!--                <Button-->
+<!--                    android:id="@+id/cancel_button"-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_weight="1"-->
+<!--                    android:text="Cancel" />-->
 
-                <Button
-                    android:id="@+id/save_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Save" />
-            </LinearLayout>
-        </LinearLayout>
-    </ScrollView>
+<!--                <Button-->
+<!--                    android:id="@+id/save_button"-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_weight="1"-->
+<!--                    android:text="Save" />-->
+<!--            </LinearLayout>-->
+<!--        </LinearLayout>-->
+<!--    </ScrollView>-->
 
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+<!--</androidx.constraintlayout.widget.ConstraintLayout>-->
