@@ -6,16 +6,17 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import ch.heigvd.iict.and.rest.ContactsRepository
 import ch.heigvd.iict.and.rest.models.Contact
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ContactsViewModel(private val repository: ContactsRepository) : ViewModel() {
 
     val allContacts = repository.allContacts
     val selectedContact = MutableLiveData<Contact?>() // Permet de partager le contact sélectionné
-    // actions
+
+    // Actions
     fun enroll() {
-        viewModelScope.launch {
-            // TODO
+        viewModelScope.launch(Dispatchers.IO) { // Exécution en arrière-plan
             try {
                 // Étape 1 : Supprimer les données locales
                 repository.clearLocalData()
@@ -40,26 +41,24 @@ class ContactsViewModel(private val repository: ContactsRepository) : ViewModel(
     }
 
     fun refresh() {
-        viewModelScope.launch {
-            // TODO
+        viewModelScope.launch(Dispatchers.IO) { // Exécution en arrière-plan
             repository.refreshContacts()
         }
     }
 
     fun insertContact(contact: Contact) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) { // Exécution en arrière-plan
             repository.insert(contact)
         }
     }
 
     fun updateContact(contact: Contact) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) { // Exécution en arrière-plan
             repository.update(contact)
         }
     }
-
-
 }
+
 
 class ContactsViewModelFactory(private val repository: ContactsRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {

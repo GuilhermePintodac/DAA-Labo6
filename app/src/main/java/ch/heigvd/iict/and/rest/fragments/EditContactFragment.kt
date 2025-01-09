@@ -130,14 +130,29 @@ class EditContactFragment : Fragment(R.layout.fragment_edit_contact) {
         return sdf.format(calendar.time)
     }
 
-    // Convertir String → Calendar
-    private fun parseDateFromUserInput(dateString: String): Calendar? {
+    private fun isValidDateFormat(dateString: String): Boolean {
+        val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        sdf.isLenient = false // Assure une validation stricte
         return try {
-            val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            val date = sdf.parse(dateString)
-            Calendar.getInstance().apply { time = date }
+            sdf.parse(dateString) != null
         } catch (e: Exception) {
-            null
+            false
         }
     }
+
+    // Convertir String → Calendar
+    private fun parseDateFromUserInput(dateString: String): Calendar? {
+        return if (isValidDateFormat(dateString)) {
+            val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            val date = sdf.parse(dateString)
+            Calendar.getInstance().apply {
+                if (date != null) {
+                    time = date
+                }
+            }
+        } else {
+            null // Retourne null si le format est invalide
+        }
+    }
+
 }
