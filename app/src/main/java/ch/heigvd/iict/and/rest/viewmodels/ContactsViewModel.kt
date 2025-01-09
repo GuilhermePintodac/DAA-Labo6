@@ -49,6 +49,13 @@ class ContactsViewModel(private val repository: ContactsRepository) : ViewModel(
         }
     }
 
+    fun deleteContact(contact: Contact) {
+        viewModelScope.launch(Dispatchers.IO) { // Exécution en arrière-plan
+            repository.delete(contact)
+        }
+    }
+
+
     fun updateContact(contact: Contact) {
         viewModelScope.launch(Dispatchers.IO) { // Exécution en arrière-plan
             repository.update(contact)

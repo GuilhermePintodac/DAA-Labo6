@@ -39,8 +39,18 @@ class EditContactFragment : Fragment(R.layout.fragment_edit_contact) {
         val officeRadioButton = view.findViewById<RadioButton>(R.id.phone_type_office)
         val faxRadioButton = view.findViewById<RadioButton>(R.id.phone_type_fax)
 
+        val deleteButton = view.findViewById<Button>(R.id.delete_button)
         val saveButton = view.findViewById<Button>(R.id.save_button)
         val cancelButton = view.findViewById<Button>(R.id.cancel_button)
+
+        // Afficher ou cacher le bouton DELETE en fonction de selectedContact
+        viewModel.selectedContact.observe(viewLifecycleOwner) { contact ->
+            if (contact != null) {
+                deleteButton.visibility = View.VISIBLE // Mode édition : afficher DELETE
+            } else {
+                deleteButton.visibility = View.GONE // Mode création : masquer DELETE
+            }
+        }
 
         // Observer le contact sélectionné
         viewModel.selectedContact.observe(viewLifecycleOwner) { contact ->
@@ -116,6 +126,14 @@ class EditContactFragment : Fragment(R.layout.fragment_edit_contact) {
                 viewModel.updateContact(newContact)
             }
 
+            findNavController().navigateUp()
+        }
+
+        // Action pour le bouton DELETE
+        deleteButton.setOnClickListener {
+            viewModel.selectedContact.value?.let { contactToDelete ->
+                viewModel.deleteContact(contactToDelete)
+            }
             findNavController().navigateUp()
         }
 

@@ -8,6 +8,7 @@ import ch.heigvd.iict.and.rest.models.PhoneType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -48,6 +49,7 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
             val jsonObject = jsonArray.getJSONObject(i)
 
             val contact = Contact(
+                id = jsonObject.optLong("id"),
                 name = jsonObject.optString("name", ""),
                 firstname = jsonObject.optString("firstname", ""),
                 birthday = parseIsoDate(jsonObject.optString("birthday", null)),
@@ -89,12 +91,87 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
     }
 
     suspend fun insert(contact: Contact) {
-        contactsDao.insert(contact)
+        val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé. Impossible d'insérer le contact.")
+
+        try {
+
+        // Appel REST pour créer le contact sur le serveur
+        val contactJson = convertContactToJson(contact)
+        val response = RestApiService.post("/contacts", mapOf("X-UUID" to uuid), contactJson)
+
+        // Parse la réponse pour récupérer l'ID attribué par le serveur
+        val jsonResponse = JSONObject(response)
+        val serverId = jsonResponse.getLong("id")
+
+        // Mettre à jour l'ID du contact local avec celui du serveur
+        val contactWithServerId = contact.copy(id = serverId)
+
+        contactsDao.insert(contactWithServerId)
+
+        }catch (e: Exception) {
+            e.printStackTrace()
+            throw Exception("Erreur lors de l'insertion du contact sur le serveur : ${e.message}")
+        }
+    }
+
+    suspend fun delete(contact: Contact) {
+        val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé. Impossible de supprimer le contact.")
+
+        try {
+            // Appel REST pour supprimer le contact sur le serveur
+            RestApiService.delete("/contacts/${contact.id}", mapOf("X-UUID" to uuid))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw Exception("Erreur lors de la suppression du contact sur le serveur : ${e.message}")
+        }
+
+        // Supprimer le contact localement
+        contactsDao.delete(contact)
     }
 
     suspend fun update(contact: Contact) {
+        val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé. Impossible de mettre à jour le contact.")
+
+        try {
+            // Appel REST pour modifier le contact sur le serveur
+            val contactJson = convertContactToJson(contact)
+            val response = RestApiService.put("/contacts/${contact.id}", mapOf("X-UUID" to uuid), contactJson)
+
+            println("Réponse serveur pour la mise à jour : $response")
+        } catch (e: Exception) {
+            if (e.message?.contains("404") == true) {
+                throw Exception("Le contact avec l'ID ${contact.id} n'existe pas sur le serveur.")
+            } else {
+                throw Exception("Erreur lors de la mise à jour du contact sur le serveur : ${e.message}")
+            }
+        }
+
         contactsDao.update(contact)
     }
+
+    // Méthode utilitaire pour convertir un contact en JSON
+    private fun convertContactToJson(contact: Contact): String {
+        val birthdayIso = contact.birthday?.let { calendar ->
+            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault())
+            sdf.format(calendar.time)
+        } ?: "null"
+
+        return """
+        {
+            "id": ${contact.id ?: "null"},
+            "name": "${contact.name}",
+            "firstname": "${contact.firstname}",
+            "email": "${contact.email}",
+            "address": "${contact.address}",
+            "zip": "${contact.zip}",
+            "city": "${contact.city}",
+            "type": "${contact.type}",
+            "phoneNumber": "${contact.phoneNumber}",
+            "birthday": "$birthdayIso"
+        }
+    """.trimIndent()
+    }
+
 
     suspend fun refreshContacts() {
         try {
