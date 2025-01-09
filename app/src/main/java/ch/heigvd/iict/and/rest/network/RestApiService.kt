@@ -23,11 +23,14 @@ object RestApiService {
             connection.requestMethod = "GET"
             headers.forEach { (key, value) -> connection.setRequestProperty(key, value) }
 
-            // Vérifier le code de réponse
+
             val responseCode = connection.responseCode
             if (responseCode != HttpURLConnection.HTTP_OK) {
-                throw Exception("Erreur HTTP: $responseCode")
+                val errorStream = connection.errorStream
+                val errorMessage = errorStream?.bufferedReader()?.use { it.readText() } ?: "Unknown error"
+                throw Exception("Erreur HTTP: $responseCode, Message: $errorMessage")
             }
+
 
             // Lire la réponse
             val reader = BufferedReader(InputStreamReader(connection.inputStream))

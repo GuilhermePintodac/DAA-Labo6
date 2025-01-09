@@ -18,21 +18,8 @@ class ContactsViewModel(private val repository: ContactsRepository) : ViewModel(
     fun enroll() {
         viewModelScope.launch(Dispatchers.IO) { // Exécution en arrière-plan
             try {
-                // Étape 1 : Supprimer les données locales
-                repository.clearLocalData()
-
-                // Étape 2 : Obtenir un nouvel UUID via l'API `/enroll`
-                val newUuid = repository.getNewUuidFromServer()
-
-                // Étape 3 : Stocker l'UUID obtenu
-                repository.saveUuid(newUuid)
-
-                // Étape 4 : Récupérer les contacts associés à l'UUID via `/contacts`
-                val contactsFromServer = repository.fetchContactsFromServer(newUuid)
-
-                // Étape 5 : Insérer les contacts récupérés dans la base locale
-                repository.insertAllContacts(contactsFromServer)
-
+                // Appeler la méthode enroll() du Repository
+                repository.enroll()
             } catch (e: Exception) {
                 // Gérer les erreurs
                 e.printStackTrace()

@@ -147,7 +147,4 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
         }
     }
 
-
-
-
 }
