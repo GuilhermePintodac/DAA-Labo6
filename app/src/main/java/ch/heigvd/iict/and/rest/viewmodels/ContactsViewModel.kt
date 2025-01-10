@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 class ContactsViewModel(private val repository: ContactsRepository) : ViewModel() {
 
-    val allContacts = repository.allContacts
+    val visibleContacts = repository.visibleContacts
     val selectedContact = MutableLiveData<Contact?>() // Permet de partager le contact sélectionné
 
     fun enroll() {
@@ -39,7 +39,8 @@ class ContactsViewModel(private val repository: ContactsRepository) : ViewModel(
 
     fun refresh() {
         viewModelScope.launch(Dispatchers.IO) { // Exécution en arrière-plan
-            repository.refreshContacts()
+//            repository.refreshContacts()
+            repository.synchronizeDirtyContacts()
         }
     }
 

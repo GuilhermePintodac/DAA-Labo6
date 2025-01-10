@@ -1,8 +1,10 @@
 package ch.heigvd.iict.and.rest
 
 import android.content.Context
+import androidx.lifecycle.LiveData
 import ch.heigvd.iict.and.rest.database.ContactsDao
 import ch.heigvd.iict.and.rest.models.Contact
+import ch.heigvd.iict.and.rest.models.OperationType
 import ch.heigvd.iict.and.rest.network.RestApiService
 import ch.heigvd.iict.and.rest.models.PhoneType
 import kotlinx.coroutines.Dispatchers
@@ -14,7 +16,8 @@ import java.util.*
 
 class ContactsRepository(private val contactsDao: ContactsDao) {
 
-    val allContacts = contactsDao.getAllContactsLiveData()
+    val visibleContacts: LiveData<List<Contact>> = contactsDao.getVisibleContactsLiveData()
+
 
     // Supprimer les données locales
     suspend fun clearLocalData() = withContext(Dispatchers.IO) {
@@ -104,13 +107,22 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
         val serverId = jsonResponse.getLong("id")
 
         // Mettre à jour l'ID du contact local avec celui du serveur
-        val contactWithServerId = contact.copy(id = serverId)
+        val contactWithServerId = contact.copy(id = serverId, isDirty = false, operationType = OperationType.NONE)
 
         contactsDao.insert(contactWithServerId)
 
         }catch (e: Exception) {
             e.printStackTrace()
-            throw Exception("Erreur lors de l'insertion du contact sur le serveur : ${e.message}")
+
+            // Générer un ID temporaire négatif basé sur l'heure actuelle
+            val temporaryId = -System.currentTimeMillis().toInt()
+
+            // Si une erreur se produit, insérer le contact avec l'état "dirty"
+            val contactDirty = contact.copy(id = temporaryId.toLong(),isDirty = true, operationType = OperationType.CREATE)
+            contactsDao.insert(contactDirty)
+
+
+//            throw Exception("Erreur lors de l'insertion du contact sur le serveur : ${e.message}")
         }
     }
 
@@ -118,36 +130,59 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
         val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé. Impossible de supprimer le contact.")
 
         try {
-            // Appel REST pour supprimer le contact sur le serveur
+            // Tente de supprimer le contact sur le serveur
             RestApiService.delete("/contacts/${contact.id}", mapOf("X-UUID" to uuid))
+
+            // Supprime le contact localement si réussi
+            contactsDao.delete(contact)
+
         } catch (e: Exception) {
             e.printStackTrace()
-            throw Exception("Erreur lors de la suppression du contact sur le serveur : ${e.message}")
-        }
 
-        // Supprimer le contact localement
-        contactsDao.delete(contact)
+            // Met le contact dans un état "dirty" si la suppression échoue
+            val contactDirty = contact.copy(isDirty = true, operationType = OperationType.DELETE)
+            contactsDao.update(contactDirty)
+        }
     }
 
-    suspend fun update(contact: Contact) {
-        val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé. Impossible de mettre à jour le contact.")
+//    suspend fun update(contact: Contact) {
+//        val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé. Impossible de mettre à jour le contact.")
+//
+//        try {
+//            // Appel REST pour modifier le contact sur le serveur
+//            val contactJson = convertContactToJson(contact)
+//            val response = RestApiService.put("/contacts/${contact.id}", mapOf("X-UUID" to uuid), contactJson)
+//
+//            println("Réponse serveur pour la mise à jour : $response")
+//        } catch (e: Exception) {
+//            if (e.message?.contains("404") == true) {
+//                throw Exception("Le contact avec l'ID ${contact.id} n'existe pas sur le serveur.")
+//            } else {
+//                throw Exception("Erreur lors de la mise à jour du contact sur le serveur : ${e.message}")
+//            }
+//        }
+//
+//        contactsDao.update(contact)
+//    }
+suspend fun update(contact: Contact) {
+    val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé. Impossible de mettre à jour le contact.")
 
-        try {
-            // Appel REST pour modifier le contact sur le serveur
-            val contactJson = convertContactToJson(contact)
-            val response = RestApiService.put("/contacts/${contact.id}", mapOf("X-UUID" to uuid), contactJson)
+    try {
+        // Appel REST pour modifier le contact sur le serveur
+        val contactJson = convertContactToJson(contact)
+        RestApiService.put("/contacts/${contact.id}", mapOf("X-UUID" to uuid), contactJson)
 
-            println("Réponse serveur pour la mise à jour : $response")
-        } catch (e: Exception) {
-            if (e.message?.contains("404") == true) {
-                throw Exception("Le contact avec l'ID ${contact.id} n'existe pas sur le serveur.")
-            } else {
-                throw Exception("Erreur lors de la mise à jour du contact sur le serveur : ${e.message}")
-            }
-        }
+        // Marquer le contact comme non dirty
+        contactsDao.update(contact.copy(isDirty = false, operationType = OperationType.NONE))
 
-        contactsDao.update(contact)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        // Ignorer l'erreur et marquer le contact comme `isDirty = true`
+        val contactDirty = contact.copy(isDirty = true, operationType = OperationType.UPDATE)
+        contactsDao.update(contactDirty)
     }
+}
+
 
     // Méthode utilitaire pour convertir un contact en JSON
     private fun convertContactToJson(contact: Contact): String {
@@ -189,4 +224,91 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
             throw Exception("Erreur lors du rafraîchissement des contacts : ${e.message}")
         }
     }
+
+//    suspend fun synchronizeDirtyContacts() {
+//        val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé.")
+//        val dirtyContacts = contactsDao.getDirtyContacts()
+//
+//        for (contact in dirtyContacts) {
+//            try {
+//                if (contact.id == null) {
+//                    // Cas d'insertion
+//                    val contactJson = convertContactToJson(contact)
+//                    val response = RestApiService.post("/contacts", mapOf("X-UUID" to uuid), contactJson)
+//
+//                    // Récupérer l'ID serveur
+//                    val jsonResponse = JSONObject(response)
+//                    val serverId = jsonResponse.getLong("id")
+//
+//                    // Mettre à jour le contact avec l'ID serveur et marquer comme non dirty
+//                    val updatedContact = contact.copy(id = serverId, isDirty = false)
+//                    contactsDao.update(updatedContact)
+//                } else {
+//                    // Cas de mise à jour
+//                    val contactJson = convertContactToJson(contact)
+//                    RestApiService.put("/contacts/${contact.id}", mapOf("X-UUID" to uuid), contactJson)
+//
+//                    // Marquer le contact comme non dirty
+//                    contactsDao.update(contact.copy(isDirty = false))
+//                }
+//            } catch (e: Exception) {
+//                // En cas d'erreur, continuer avec les autres contacts
+//                e.printStackTrace()
+//            }
+//        }
+//    }
+    suspend fun synchronizeDirtyContacts() {
+        val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé.")
+        val dirtyContacts = contactsDao.getDirtyContacts()
+
+        for (contact in dirtyContacts) {
+            try {
+                when (contact.operationType) {
+                    OperationType.CREATE -> {
+                        // Tentative d'insertion
+                        val contactJson = convertContactToJson(contact)
+                        val response = RestApiService.post("/contacts", mapOf("X-UUID" to uuid), contactJson)
+
+                        // Récupérer l'ID serveur
+                        val jsonResponse = JSONObject(response)
+                        val serverId = jsonResponse.getLong("id")
+
+                        // Mettre à jour le contact avec l'ID serveur et marquer comme synchronisé
+                        val updatedContact = contact.copy(
+                            id = serverId,
+                            isDirty = false,
+                            operationType = OperationType.NONE
+                        )
+                        contactsDao.update(updatedContact)
+                    }
+                    OperationType.UPDATE -> {
+                        // Tentative de mise à jour
+                        val contactJson = convertContactToJson(contact)
+                        RestApiService.put("/contacts/${contact.id}", mapOf("X-UUID" to uuid), contactJson)
+
+                        // Marquer comme synchronisé si réussi
+                        contactsDao.update(contact.copy(isDirty = false, operationType = OperationType.NONE))
+                    }
+                    OperationType.DELETE -> {
+                        // Tentative de suppression
+                        RestApiService.delete("/contacts/${contact.id}", mapOf("X-UUID" to uuid))
+
+                        // Supprimer définitivement si réussi
+                        contactsDao.delete(contact)
+                    }
+                    else -> {
+                        // Ignorer les contacts avec OperationType.NONE
+                    }
+                }
+            } catch (e: Exception) {
+                // En cas d'échec, le contact reste dans son état dirty
+                e.printStackTrace()
+
+                // Vous pouvez ajouter des logs ou des notifications si nécessaire pour informer l'utilisateur
+            }
+        }
+    }
+
+
+
 }

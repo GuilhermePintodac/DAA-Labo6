@@ -35,4 +35,13 @@ interface ContactsDao {
     @Query("DELETE FROM Contact")
     fun clearAllContacts()
 
+    @Query("SELECT * FROM Contact WHERE isDirty = 1")
+    fun getDirtyContacts(): List<Contact>
+
+    @Query("UPDATE Contact SET isDirty = :isDirty WHERE id = :id")
+    suspend fun markContactAsDirty(id: Long, isDirty: Boolean)
+
+    @Query("SELECT * FROM Contact WHERE operationType != 'DELETE'")
+    fun getVisibleContactsLiveData(): LiveData<List<Contact>>
+
 }

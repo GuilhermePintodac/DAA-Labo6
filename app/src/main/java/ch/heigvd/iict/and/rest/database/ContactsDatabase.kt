@@ -13,7 +13,7 @@ import java.util.Calendar
 import java.util.GregorianCalendar
 import kotlin.concurrent.thread
 
-@Database(entities = [Contact::class], version = 1, exportSchema = true)
+@Database(entities = [Contact::class], version = 3, exportSchema = true)
 @TypeConverters(CalendarConverter::class)
 abstract class ContactsDatabase : RoomDatabase() {
 
@@ -60,7 +60,9 @@ abstract class ContactsDatabase : RoomDatabase() {
                                                 email = "w.hilt@heig-vd.ch",
                                                 address = "Route de Cheseaux 1",
                                                 zip = "1400", city = "Yverdon-les-Bains",
-                                                type = PhoneType.OFFICE, phoneNumber = "024 111 22 33" )
+                                                type = PhoneType.OFFICE,
+                                                phoneNumber = "024 111 22 33",
+                                                isDirty = false)
 
                             val c2 =  Contact(  id = null,
                                                 name = "Fisher",
@@ -77,7 +79,9 @@ abstract class ContactsDatabase : RoomDatabase() {
                                                 email = "b.fisher@heig-vd.ch",
                                                 address = "Avenue des Sports 20",
                                                 zip = "1400", city = "Yverdon-les-Bains",
-                                                type = PhoneType.MOBILE, phoneNumber = "079 111 22 33" )
+                                                type = PhoneType.MOBILE,
+                                                phoneNumber = "079 111 22 33",
+                                                isDirty = false)
 
                             database.contactsDao().insert(c1)
                             database.contactsDao().insert(c2)
