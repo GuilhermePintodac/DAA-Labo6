@@ -26,11 +26,9 @@ class MainActivity : AppCompatActivity() {
 
         binding.mainFabNew.setOnClickListener {
             // FIXME - create a new contact
-//            Toast.makeText(this, "TODO - Création d'un nouveau contact", Toast.LENGTH_SHORT).show()
             contactsViewModel.selectedContact.value = null // Mode création
             findNavController(R.id.nav_host_fragment).navigate(R.id.action_listFragment_to_editContactFragment)
-//            val navController = findNavController(R.id.nav_host_fragment)
-//            navController.navigate(R.id.action_listFragment_to_editContactFragment)
+
         }
     }
 
