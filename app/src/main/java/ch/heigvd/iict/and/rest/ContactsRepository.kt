@@ -98,16 +98,16 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
 
         try {
 
-        // Appel REST pour créer le contact sur le serveur
-        val contactJson = convertContactToJson(contact)
-        val response = RestApiService.post("/contacts", mapOf("X-UUID" to uuid), contactJson)
+            // Appel REST pour créer le contact sur le serveur
+            val contactJson = convertContactToJson(contact)
+            val response = RestApiService.post("/contacts", mapOf("X-UUID" to uuid), contactJson)
 
-        // Parse la réponse pour récupérer l'ID attribué par le serveur
-        val jsonResponse = JSONObject(response)
-        val serverId = jsonResponse.getLong("id")
+            // Parse la réponse pour récupérer l'ID attribué par le serveur
+            val jsonResponse = JSONObject(response)
+            val serverId = jsonResponse.getLong("id")
 
-        // Mettre à jour l'ID du contact local avec celui du serveur
-        val contactWithServerId = contact.copy(id = serverId, isDirty = false, operationType = OperationType.NONE)
+            // Mettre à jour l'ID du contact local avec celui du serveur
+            val contactWithServerId = contact.copy(id = serverId, isDirty = false, operationType = OperationType.NONE)
 
         contactsDao.insert(contactWithServerId)
 
@@ -120,9 +120,6 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
             // Si une erreur se produit, insérer le contact avec l'état "dirty"
             val contactDirty = contact.copy(id = temporaryId.toLong(),isDirty = true, operationType = OperationType.CREATE)
             contactsDao.insert(contactDirty)
-
-
-//            throw Exception("Erreur lors de l'insertion du contact sur le serveur : ${e.message}")
         }
     }
 
@@ -146,24 +143,24 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
     }
 
 
-suspend fun update(contact: Contact) {
-    val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé. Impossible de mettre à jour le contact.")
+    suspend fun update(contact: Contact) {
+        val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé. Impossible de mettre à jour le contact.")
 
-    try {
-        // Appel REST pour modifier le contact sur le serveur
-        val contactJson = convertContactToJson(contact)
-        RestApiService.put("/contacts/${contact.id}", mapOf("X-UUID" to uuid), contactJson)
+        try {
+            // Appel REST pour modifier le contact sur le serveur
+            val contactJson = convertContactToJson(contact)
+            RestApiService.put("/contacts/${contact.id}", mapOf("X-UUID" to uuid), contactJson)
 
-        // Marquer le contact comme non dirty
-        contactsDao.update(contact.copy(isDirty = false, operationType = OperationType.NONE))
+            // Marquer le contact comme non dirty
+            contactsDao.update(contact.copy(isDirty = false, operationType = OperationType.NONE))
 
-    } catch (e: Exception) {
-        e.printStackTrace()
-        // Ignorer l'erreur et marquer le contact comme `isDirty = true`
-        val contactDirty = contact.copy(isDirty = true, operationType = OperationType.UPDATE)
-        contactsDao.update(contactDirty)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Ignorer l'erreur et marquer le contact comme `isDirty = true`
+            val contactDirty = contact.copy(isDirty = true, operationType = OperationType.UPDATE)
+            contactsDao.update(contactDirty)
+        }
     }
-}
 
 
     // Méthode utilitaire pour convertir un contact en JSON
@@ -187,24 +184,6 @@ suspend fun update(contact: Contact) {
             "birthday": "$birthdayIso"
         }
     """.trimIndent()
-    }
-
-
-    suspend fun refreshContacts() {
-        try {
-            // Étape 1 : Récupérer l'UUID enregistré dans les SharedPreferences
-            val uuid = getSavedUuid() ?: throw Exception("Aucun UUID trouvé. Impossible de rafraîchir les contacts.")
-
-            // Étape 2 : Effacer les données locales
-            clearLocalData()
-
-            // Étape 3 : Récupérer les contacts depuis le serveur
-            fetchContactsFromServer(uuid)
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw Exception("Erreur lors du rafraîchissement des contacts : ${e.message}")
-        }
     }
 
 
@@ -254,12 +233,7 @@ suspend fun update(contact: Contact) {
             } catch (e: Exception) {
                 // En cas d'échec, le contact reste dans son état dirty
                 e.printStackTrace()
-
-                // Vous pouvez ajouter des logs ou des notifications si nécessaire pour informer l'utilisateur
             }
         }
     }
-
-
-
 }

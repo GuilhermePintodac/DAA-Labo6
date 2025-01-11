@@ -4,9 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.navigation.Navigation.findNavController
 import androidx.navigation.findNavController
 import ch.heigvd.iict.and.rest.databinding.ActivityMainBinding
 import ch.heigvd.iict.and.rest.viewmodels.ContactsViewModel
@@ -25,7 +23,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.mainFabNew.setOnClickListener {
-            // FIXME - create a new contact
             contactsViewModel.selectedContact.value = null // Mode création
             findNavController(R.id.nav_host_fragment).navigate(R.id.action_listFragment_to_editContactFragment)
 

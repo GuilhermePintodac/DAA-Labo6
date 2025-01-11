@@ -15,7 +15,7 @@ class ContactsViewModel(private val repository: ContactsRepository) : ViewModel(
     val selectedContact = MutableLiveData<Contact?>() // Permet de partager le contact sélectionné
 
     fun enroll() {
-        viewModelScope.launch(Dispatchers.IO) { // Exécution en arrière-plan
+        viewModelScope.launch(Dispatchers.IO) {
             try {
 
                 // Étape 1 : Supprimer les données locales
@@ -38,27 +38,26 @@ class ContactsViewModel(private val repository: ContactsRepository) : ViewModel(
     }
 
     fun refresh() {
-        viewModelScope.launch(Dispatchers.IO) { // Exécution en arrière-plan
-//            repository.refreshContacts()
+        viewModelScope.launch(Dispatchers.IO) {
             repository.synchronizeDirtyContacts()
         }
     }
 
     fun insertContact(contact: Contact) {
-        viewModelScope.launch(Dispatchers.IO) { // Exécution en arrière-plan
+        viewModelScope.launch(Dispatchers.IO) {
             repository.insert(contact)
         }
     }
 
     fun deleteContact(contact: Contact) {
-        viewModelScope.launch(Dispatchers.IO) { // Exécution en arrière-plan
+        viewModelScope.launch(Dispatchers.IO) {
             repository.delete(contact)
         }
     }
 
 
     fun updateContact(contact: Contact) {
-        viewModelScope.launch(Dispatchers.IO) { // Exécution en arrière-plan
+        viewModelScope.launch(Dispatchers.IO) {
             repository.update(contact)
         }
     }
