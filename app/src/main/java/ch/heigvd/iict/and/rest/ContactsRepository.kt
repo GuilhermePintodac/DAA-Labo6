@@ -93,7 +93,7 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
         }
     }
 
-    suspend fun insert(contact: Contact) {
+    suspend fun insert(contact: Contact) = withContext(Dispatchers.IO) {
         val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé. Impossible d'insérer le contact.")
 
         try {
@@ -123,7 +123,7 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
         }
     }
 
-    suspend fun delete(contact: Contact) {
+    suspend fun delete(contact: Contact) = withContext(Dispatchers.IO) {
         val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé. Impossible de supprimer le contact.")
 
         try {
@@ -143,7 +143,7 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
     }
 
 
-    suspend fun update(contact: Contact) {
+    suspend fun update(contact: Contact) = withContext(Dispatchers.IO) {
         val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé. Impossible de mettre à jour le contact.")
 
         try {
@@ -187,7 +187,7 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
     }
 
 
-    suspend fun synchronizeDirtyContacts() {
+    suspend fun synchronizeDirtyContacts() = withContext(Dispatchers.IO) {
         val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé.")
         val dirtyContacts = contactsDao.getDirtyContacts()
 
