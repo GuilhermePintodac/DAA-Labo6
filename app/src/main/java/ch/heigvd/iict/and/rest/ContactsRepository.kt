@@ -120,9 +120,6 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
             // Si une erreur se produit, insérer le contact avec l'état "dirty"
             val contactDirty = contact.copy(id = temporaryId.toLong(),isDirty = true, operationType = OperationType.CREATE)
             contactsDao.insert(contactDirty)
-
-
-//            throw Exception("Erreur lors de l'insertion du contact sur le serveur : ${e.message}")
         }
     }
 
@@ -189,25 +186,6 @@ suspend fun update(contact: Contact) {
     """.trimIndent()
     }
 
-
-    suspend fun refreshContacts() {
-        try {
-            // Étape 1 : Récupérer l'UUID enregistré dans les SharedPreferences
-            val uuid = getSavedUuid() ?: throw Exception("Aucun UUID trouvé. Impossible de rafraîchir les contacts.")
-
-            // Étape 2 : Effacer les données locales
-            clearLocalData()
-
-            // Étape 3 : Récupérer les contacts depuis le serveur
-            fetchContactsFromServer(uuid)
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw Exception("Erreur lors du rafraîchissement des contacts : ${e.message}")
-        }
-    }
-
-
     suspend fun synchronizeDirtyContacts() {
         val uuid = getSavedUuid() ?: throw Exception("UUID non trouvé.")
         val dirtyContacts = contactsDao.getDirtyContacts()
@@ -260,6 +238,8 @@ suspend fun update(contact: Contact) {
         }
     }
 
-
+    suspend fun getContactById(id: Long): Contact? {
+        return contactsDao.getContactById(id)
+    }
 
 }

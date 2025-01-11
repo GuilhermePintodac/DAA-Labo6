@@ -24,6 +24,11 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        if (savedInstanceState != null) {
+            // Restaurer l'état du ViewModel
+            contactsViewModel.restoreSelectedContactState(savedInstanceState)
+        }
+
         binding.mainFabNew.setOnClickListener {
             // FIXME - create a new contact
             contactsViewModel.selectedContact.value = null // Mode création
@@ -50,6 +55,14 @@ class MainActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        // Sauvegarder l'état du ViewModel
+        contactsViewModel.saveSelectedContactState(outState)
+    }
+
 
     companion object {
         private val TAG = MainActivity::class.java.simpleName

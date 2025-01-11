@@ -2,13 +2,11 @@ package ch.heigvd.iict.and.rest.fragments
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.RadioButton
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import ch.heigvd.iict.and.rest.R
+import ch.heigvd.iict.and.rest.databinding.FragmentEditContactBinding
 import ch.heigvd.iict.and.rest.models.Contact
 import ch.heigvd.iict.and.rest.models.PhoneType
 import ch.heigvd.iict.and.rest.viewmodels.ContactsViewModel
@@ -18,131 +16,159 @@ import java.util.*
 class EditContactFragment : Fragment(R.layout.fragment_edit_contact) {
 
     private lateinit var viewModel: ContactsViewModel
+    private lateinit var binding: FragmentEditContactBinding
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel = ViewModelProvider(requireActivity()).get(ContactsViewModel::class.java)
+        // Initialiser le ViewModel
+        viewModel = ViewModelProvider(requireActivity())[ContactsViewModel::class.java]
 
-        // Récupérez toutes les vues nécessaires
-        val nameEditText = view.findViewById<EditText>(R.id.edit_name)
-        val firstnameEditText = view.findViewById<EditText>(R.id.edit_firstname)
-        val emailEditText = view.findViewById<EditText>(R.id.edit_email)
-        val birthdayEditText = view.findViewById<EditText>(R.id.edit_birthday)
-        val addressEditText = view.findViewById<EditText>(R.id.edit_address)
-        val zipEditText = view.findViewById<EditText>(R.id.edit_zip)
-        val cityEditText = view.findViewById<EditText>(R.id.edit_city)
-        val phoneEditText = view.findViewById<EditText>(R.id.edit_phone)
+        // Initialiser le binding
+        binding = FragmentEditContactBinding.bind(view)
 
-        val homeRadioButton = view.findViewById<RadioButton>(R.id.phone_type_home)
-        val mobileRadioButton = view.findViewById<RadioButton>(R.id.phone_type_mobile)
-        val officeRadioButton = view.findViewById<RadioButton>(R.id.phone_type_office)
-        val faxRadioButton = view.findViewById<RadioButton>(R.id.phone_type_fax)
-
-        val deleteButton = view.findViewById<Button>(R.id.delete_button)
-        val saveButton = view.findViewById<Button>(R.id.save_button)
-        val cancelButton = view.findViewById<Button>(R.id.cancel_button)
-
-        // Afficher ou cacher le bouton DELETE en fonction de selectedContact
-        viewModel.selectedContact.observe(viewLifecycleOwner) { contact ->
-            if (contact != null) {
-                deleteButton.visibility = View.VISIBLE // Mode édition : afficher DELETE
-            } else {
-                deleteButton.visibility = View.GONE // Mode création : masquer DELETE
-            }
+        // Restaurer l'état des champs en priorité
+        if (savedInstanceState != null) {
+            restoreFieldsFromBundle(savedInstanceState)
+        } else {
+            observeViewModel()
         }
 
+        // Configurer la visibilité du bouton Delete
+        configureDeleteButtonVisibility()
+
+        setupListeners()
+    }
+
+    private fun restoreFieldsFromBundle(bundle: Bundle) {
+        binding.editName.setText(bundle.getString("name", ""))
+        binding.editFirstname.setText(bundle.getString("firstname", ""))
+        binding.editEmail.setText(bundle.getString("email", ""))
+        binding.editBirthday.setText(bundle.getString("birthday", ""))
+        binding.editAddress.setText(bundle.getString("address", ""))
+        binding.editZip.setText(bundle.getString("zip", ""))
+        binding.editCity.setText(bundle.getString("city", ""))
+        binding.editPhone.setText(bundle.getString("phone", ""))
+
+        when (bundle.getString("phoneType")) {
+            PhoneType.HOME.name -> binding.phoneTypeHome.isChecked = true
+            PhoneType.MOBILE.name -> binding.phoneTypeMobile.isChecked = true
+            PhoneType.OFFICE.name -> binding.phoneTypeOffice.isChecked = true
+            PhoneType.FAX.name -> binding.phoneTypeFax.isChecked = true
+        }
+    }
+
+    private fun observeViewModel() {
         // Observer le contact sélectionné
         viewModel.selectedContact.observe(viewLifecycleOwner) { contact ->
             if (contact != null) {
-                // Mode modification : pré-remplir les champs
-                nameEditText.setText(contact.name)
-                firstnameEditText.setText(contact.firstname)
-                emailEditText.setText(contact.email)
-                birthdayEditText.setText(contact.birthday?.let { formatDate(it) } ?: "")
-                addressEditText.setText(contact.address)
-                zipEditText.setText(contact.zip)
-                cityEditText.setText(contact.city)
-                phoneEditText.setText(contact.phoneNumber)
-
-                // Sélectionner le bon RadioButton
-                when (contact.type) {
-                    PhoneType.HOME -> homeRadioButton.isChecked = true
-                    PhoneType.MOBILE -> mobileRadioButton.isChecked = true
-                    PhoneType.OFFICE -> officeRadioButton.isChecked = true
-                    PhoneType.FAX -> faxRadioButton.isChecked = true
-                    else -> {
-                        homeRadioButton.isChecked = false
-                        mobileRadioButton.isChecked = false
-                        officeRadioButton.isChecked = false
-                        faxRadioButton.isChecked = false
-                    }
-                }
+                populateFields(contact) // Remplir les champs pour la modification
             } else {
-                // Mode création : vider les champs
-                nameEditText.setText("")
-                firstnameEditText.setText("")
-                emailEditText.setText("")
-                birthdayEditText.setText("")
-                addressEditText.setText("")
-                zipEditText.setText("")
-                cityEditText.setText("")
-                phoneEditText.setText("")
-
-                // Désélectionner les RadioButtons
-                homeRadioButton.isChecked = false
-                mobileRadioButton.isChecked = false
-                officeRadioButton.isChecked = false
-                faxRadioButton.isChecked = false
+                clearFields() // Vider les champs pour la création
             }
         }
+    }
 
-        // Ajouter la logique pour les boutons "Save" et "Cancel"
-        saveButton.setOnClickListener {
-            val birthday = parseDateFromUserInput(birthdayEditText.text.toString())
-
-            val newContact = Contact(
-                id = viewModel.selectedContact.value?.id,
-                name = nameEditText.text.toString(),
-                firstname = firstnameEditText.text.toString(),
-                email = emailEditText.text.toString(),
-                address = addressEditText.text.toString(),
-                zip = zipEditText.text.toString(),
-                city = cityEditText.text.toString(),
-                birthday = birthday,
-                type = when {
-                    homeRadioButton.isChecked -> PhoneType.HOME
-                    mobileRadioButton.isChecked -> PhoneType.MOBILE
-                    officeRadioButton.isChecked -> PhoneType.OFFICE
-                    faxRadioButton.isChecked -> PhoneType.FAX
-                    else -> null
-                },
-                phoneNumber = phoneEditText.text.toString()
-            )
-
-            if (viewModel.selectedContact.value == null) {
-                viewModel.insertContact(newContact)
+    private fun configureDeleteButtonVisibility() {
+        viewModel.selectedContact.observe(viewLifecycleOwner) { contact ->
+            if (contact != null) {
+                binding.deleteButton.visibility = View.VISIBLE // Mode modification : afficher DELETE
             } else {
-                viewModel.updateContact(newContact)
+                binding.deleteButton.visibility = View.GONE // Mode création : masquer DELETE
             }
+        }
+    }
 
-            findNavController().navigateUp()
+    private fun setupListeners() {
+        binding.saveButton.setOnClickListener {
+            saveContact()
         }
 
-        // Action pour le bouton DELETE
-        deleteButton.setOnClickListener {
-            viewModel.selectedContact.value?.let { contactToDelete ->
-                viewModel.deleteContact(contactToDelete)
-            }
-            findNavController().navigateUp()
+        binding.deleteButton.setOnClickListener {
+            deleteContact()
         }
 
-        cancelButton.setOnClickListener {
+        binding.cancelButton.setOnClickListener {
             findNavController().navigateUp()
         }
     }
 
-    // Convertir Calendar → String
+    private fun saveContact() {
+        val birthday = parseDateFromUserInput(binding.editBirthday.text.toString())
+
+        val newContact = Contact(
+            id = viewModel.selectedContact.value?.id,
+            name = binding.editName.text.toString(),
+            firstname = binding.editFirstname.text.toString(),
+            email = binding.editEmail.text.toString(),
+            address = binding.editAddress.text.toString(),
+            zip = binding.editZip.text.toString(),
+            city = binding.editCity.text.toString(),
+            birthday = birthday,
+            type = when {
+                binding.phoneTypeHome.isChecked -> PhoneType.HOME
+                binding.phoneTypeMobile.isChecked -> PhoneType.MOBILE
+                binding.phoneTypeOffice.isChecked -> PhoneType.OFFICE
+                binding.phoneTypeFax.isChecked -> PhoneType.FAX
+                else -> null
+            },
+            phoneNumber = binding.editPhone.text.toString()
+        )
+
+        if (viewModel.selectedContact.value == null) {
+            viewModel.insertContact(newContact)
+        } else {
+            viewModel.updateContact(newContact)
+        }
+
+        findNavController().navigateUp()
+    }
+
+    private fun deleteContact() {
+        viewModel.selectedContact.value?.let {
+            viewModel.deleteContact(it)
+        }
+        findNavController().navigateUp()
+    }
+
+    private fun populateFields(contact: Contact) {
+        binding.editName.setText(contact.name)
+        binding.editFirstname.setText(contact.firstname)
+        binding.editEmail.setText(contact.email)
+        binding.editBirthday.setText(contact.birthday?.let { formatDate(it) } ?: "")
+        binding.editAddress.setText(contact.address)
+        binding.editZip.setText(contact.zip)
+        binding.editCity.setText(contact.city)
+        binding.editPhone.setText(contact.phoneNumber)
+
+        when (contact.type) {
+            PhoneType.HOME -> binding.phoneTypeHome.isChecked = true
+            PhoneType.MOBILE -> binding.phoneTypeMobile.isChecked = true
+            PhoneType.OFFICE -> binding.phoneTypeOffice.isChecked = true
+            PhoneType.FAX -> binding.phoneTypeFax.isChecked = true
+            else -> clearRadioButtons()
+        }
+    }
+
+    private fun clearFields() {
+        binding.editName.text.clear()
+        binding.editFirstname.text.clear()
+        binding.editEmail.text.clear()
+        binding.editBirthday.text.clear()
+        binding.editAddress.text.clear()
+        binding.editZip.text.clear()
+        binding.editCity.text.clear()
+        binding.editPhone.text.clear()
+        clearRadioButtons()
+    }
+
+    private fun clearRadioButtons() {
+        binding.phoneTypeHome.isChecked = false
+        binding.phoneTypeMobile.isChecked = false
+        binding.phoneTypeOffice.isChecked = false
+        binding.phoneTypeFax.isChecked = false
+    }
+
     private fun formatDate(calendar: Calendar): String {
         val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
         return sdf.format(calendar.time)
@@ -158,19 +184,39 @@ class EditContactFragment : Fragment(R.layout.fragment_edit_contact) {
         }
     }
 
-    // Convertir String → Calendar
     private fun parseDateFromUserInput(dateString: String): Calendar? {
         return if (isValidDateFormat(dateString)) {
             val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
             val date = sdf.parse(dateString)
-            Calendar.getInstance().apply {
-                if (date != null) {
-                    time = date
-                }
-            }
+            Calendar.getInstance().apply { time = date }
         } else {
-            null // Retourne null si le format est invalide
+            null
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        // Sauvegarder les champs saisis
+        outState.putString("name", binding.editName.text.toString())
+        outState.putString("firstname", binding.editFirstname.text.toString())
+        outState.putString("email", binding.editEmail.text.toString())
+        outState.putString("birthday", binding.editBirthday.text.toString())
+        outState.putString("address", binding.editAddress.text.toString())
+        outState.putString("zip", binding.editZip.text.toString())
+        outState.putString("city", binding.editCity.text.toString())
+        outState.putString("phone", binding.editPhone.text.toString())
+
+        // Sauvegarder le type de téléphone
+        outState.putString(
+            "phoneType", when {
+                binding.phoneTypeHome.isChecked -> PhoneType.HOME.name
+                binding.phoneTypeMobile.isChecked -> PhoneType.MOBILE.name
+                binding.phoneTypeOffice.isChecked -> PhoneType.OFFICE.name
+                binding.phoneTypeFax.isChecked -> PhoneType.FAX.name
+                else -> null
+            }
+        )
+    }
 }
+

@@ -1,5 +1,6 @@
 package ch.heigvd.iict.and.rest.viewmodels
 
+import android.os.Bundle
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -62,6 +63,23 @@ class ContactsViewModel(private val repository: ContactsRepository) : ViewModel(
             repository.update(contact)
         }
     }
+
+    fun saveSelectedContactState(outState: Bundle) {
+        selectedContact.value?.let { contact ->
+            outState.putLong("selectedContactId", contact.id ?: -1L)
+        }
+    }
+
+    fun restoreSelectedContactState(savedInstanceState: Bundle) {
+        val selectedContactId = savedInstanceState.getLong("selectedContactId", -1L)
+        if (selectedContactId != -1L) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val contact = repository.getContactById(selectedContactId)
+                selectedContact.postValue(contact)
+            }
+        }
+    }
+
 }
 
 
