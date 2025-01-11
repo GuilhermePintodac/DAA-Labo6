@@ -236,4 +236,9 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
             }
         }
     }
+
+    suspend fun getContactById(id: Long): Contact? {
+        return contactsDao.getContactById(id)
+    }
+
 }
