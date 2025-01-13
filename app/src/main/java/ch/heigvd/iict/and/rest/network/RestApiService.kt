@@ -1,3 +1,6 @@
+/*
+Auteur :  Shyshmarov Alexandre / Guilherme Pinto
+ */
 package ch.heigvd.iict.and.rest.network
 
 import java.io.BufferedReader

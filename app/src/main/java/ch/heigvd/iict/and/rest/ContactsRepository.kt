@@ -1,3 +1,6 @@
+/*
+Auteur :  Shyshmarov Alexandre / Guilherme Pinto
+ */
 package ch.heigvd.iict.and.rest
 
 import android.content.Context
@@ -237,7 +240,7 @@ class ContactsRepository(private val contactsDao: ContactsDao) {
         }
     }
 
-    suspend fun getContactById(id: Long): Contact? {
+    fun getContactById(id: Long): Contact? {
         return contactsDao.getContactById(id)
     }
 
